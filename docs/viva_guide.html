@@ -1,0 +1,266 @@
+<title>PathSnap Viva Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: single reading column with sticky section nav; road-map palette (asphalt, route red, GPS blue) */
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --fg:#1b2230; --mute:#5b6576; --line:#dfe3ea;
+  --route:#c8321e; --gps:#2459c7; --ok:#11804a; --chip:#eef2f8;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --panel:#1a1f28; --fg:#e6e9ef; --mute:#9aa4b5; --line:#2c3340;
+  --route:#ff6b55; --gps:#7aa2ff; --ok:#4cc68a; --chip:#232a36; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161d; --panel:#1a1f28; --fg:#e6e9ef; --mute:#9aa4b5; --line:#2c3340;
+  --route:#ff6b55; --gps:#7aa2ff; --ok:#4cc68a; --chip:#232a36; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:900px;margin:0 auto}
+header{padding-block:32px 16px;border-bottom:3px solid var(--route)}
+h1{font:700 2.1rem/1.1 var(--display);margin:0;text-wrap:balance}
+h2{font:700 1.4rem/1.2 var(--display);margin:40px 0 8px;text-wrap:balance;scroll-margin-top:60px}
+h3{font:600 1.02rem/1.3 var(--body);margin:20px 0 6px}
+p,li{max-width:68ch}.mute{color:var(--mute)}
+nav{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);border-bottom:1px solid var(--line);padding-block:8px;z-index:5;display:flex;gap:6px;flex-wrap:wrap}
+nav a{font:500 .8rem var(--body);color:var(--fg);text-decoration:none;background:var(--chip);padding:3px 9px;border-radius:12px}
+nav a:hover,nav a:focus-visible{background:var(--route);color:#fff;outline:none}
+code,.mono{font-family:var(--mono);font-size:.88em;background:var(--chip);padding:1px 5px;border-radius:4px}
+.tbl{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--mute);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+td.n{text-align:right;font-family:var(--mono)}
+.best{color:var(--ok);font-weight:600}
+.owner{display:inline-block;font:600 .72rem var(--body);letter-spacing:.04em;text-transform:uppercase;color:var(--route);margin-bottom:2px}
+.qa{display:grid;gap:10px;margin-top:8px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.qa summary{font-weight:600;cursor:pointer}
+.qa details p{margin:8px 0 0}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.split div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.split b{font-family:var(--display);font-size:1.05rem}
+.split ul{margin:6px 0 0;padding-left:18px;font-size:.9rem}
+.formula{font-family:var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.pending{color:var(--mute);font-style:italic}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="owner">Team 5 · UE24CS352A Machine Learning</div>
+  <h1>PathSnap viva guide</h1>
+  <p class="mute">Everything any of us can be asked, with our real numbers. Read all of it, not only your part. Numbers come from <code>results/</code> in the repo.</p>
+</header>
+<nav>
+  <a href="#team">Who did what</a><a href="#data">Data files</a><a href="#prep">Preprocessing</a><a href="#feat">Features</a>
+  <a href="#models">5 models</a><a href="#overfit">Overfitting</a><a href="#pick">Final pick</a><a href="#tune">Bayesian tuning</a>
+  <a href="#hmm">HMM / Viterbi</a><a href="#deploy">API + UI</a><a href="#qa">Rapid-fire Q&amp;A</a>
+</nav>
+
+<h2 id="team">Who did what</h2>
+<div class="split">
+  <div><b>Venkatesh</b><ul><li>P1: preprocessing, EDA</li><li>P2: HMM/Viterbi, inference pipeline (<code>src/pipeline.py</code>)</li><li>Report §2.2, §5</li></ul></div>
+  <div><b>Vedant Sharma</b><ul><li>P1: feature engineering</li><li>P2: FastAPI backend (laptop 1)</li><li>Report §7 API</li></ul></div>
+  <div><b>Vedant Srivastava</b><ul><li>P1: choice of the 5 models</li><li>P2: evaluator UI (laptop 2), Folium maps</li><li>Report §6, §7 UI</li></ul></div>
+  <div><b>Vaibhav</b><ul><li>P1: comparison, picking the best model</li><li>P2: Bayesian tuning (Optuna TPE)</li><li>Report §3, §4</li></ul></div>
+</div>
+<p class="mute">The examiner asks anyone anything. Everyone should be able to explain every section below in two sentences.</p>
+
+<h2 id="data">The data files</h2>
+<p>Each trip is a folder <code>&lt;id&gt;/</code> with four whitespace-separated files without headers. Each trip comes with <b>its own road network</b>.</p>
+<div class="tbl"><table>
+<tr><th>File</th><th>Columns</th><th>Meaning</th></tr>
+<tr><td><code>.track</code></td><td>lon, lat, timestamp (s)</td><td>Noisy GPS fixes of the vehicle. ~1 Hz (94% of steps are exactly 1 s). This is the input.</td></tr>
+<tr><td><code>.nodes</code></td><td>lon, lat</td><td>Road-network junctions / shape points. Row number = node id (0-based).</td></tr>
+<tr><td><code>.arcs</code></td><td>from_node, to_node</td><td>Directed road segments between two nodes. Row number = arc id. A two-way street is two arcs (A→B and B→A); about 95% of arcs have a reverse twin.</td></tr>
+<tr><td><code>.route</code></td><td>arc_id</td><td>Ground truth: the ordered list of arcs the vehicle drove. No timestamps, so one arc covers many GPS points.</td></tr>
+</table></div>
+<ul>
+<li>Partitions: <b>80 train</b>, <b>10 student-test</b>, 10 evaluator (held by organisers, never used in development).</li>
+<li>Train: 208,417 GPS points; networks range from 649 to 307,392 arcs. Student-test: 19,160 points.</li>
+<li>Coordinates are around Kyoto, Japan (≈135.7°E, 34.9°N).</li>
+<li>A GPS row does not correspond to a route row, so we had to create per-point labels (see preprocessing).</li>
+</ul>
+
+<h2 id="prep">Preprocessing and EDA <span class="owner">Venkatesh</span></h2>
+<ul>
+<li><b>Checks:</b> 0 missing values, 0 duplicate timestamps, 0 out-of-order timestamps in all 90 trips. 1,216 gaps longer than 5 s in train. All route arc ids exist in the arc file.</li>
+<li><b>Cleaning:</b> sort by time, drop NaN or duplicate timestamps, drop points more than ~1 km outside the network bounding box.</li>
+<li><b>Projection:</b> lon/lat → UTM zone 53N (EPSG:32653), so every distance is in metres. Degrees are not distances: at 35°N one degree of longitude ≈ 91 km, one degree of latitude ≈ 111 km.</li>
+<li><b>Smoothing:</b> rolling median over 5 points, used only to compute heading and speed. Distances use the raw position.</li>
+<li><b>Candidate generation:</b> sample points every 15 m along every arc, put them in a KD-tree, find arcs near each GPS point, compute the exact point-to-segment distance, keep the <b>K = 8 nearest arcs within R = 50 m</b>.</li>
+<li><b>Labels:</b> dynamic-programming alignment of the GPS points to the ordered route. It may only move forward along the route (max 20 arcs per step) and minimises the total distance. A greedy pointer we tried first got lost on trip 8 (miss rate 41% → 2% after the fix).</li>
+<li><b>Bad trips:</b> in trips 33 and 54 the GPS lies about 150 m from their own reference route for the whole trip, so their labels are wrong. Excluded from training (rule: median GPS-to-route distance &gt; 50 m).</li>
+<li><b>Candidate miss rate</b> (true arc not among the 8 candidates): 2.0% train, 0.45% student-test. That is the ceiling on accuracy.</li>
+<li>EDA network check (networkx): largest weakly connected component holds 97% of nodes on average; no isolated nodes.</li>
+</ul>
+
+<h2 id="feat">Features <span class="owner">Vedant Sharma</span></h2>
+<p><b>Framing:</b> one row per (GPS point, candidate arc), binary label “is this the true arc?”. Arc ids are different in every trip, so they cannot be classes; per-candidate features work across trips. 1,023,030 train rows, 17% positive.</p>
+<p><b>13 features engineered</b> (all new, computed from geometry; LightGBM split-count importance in brackets, highest first):</p>
+<div class="tbl"><table>
+<tr><th>Feature</th><th>Why</th><th>Rank</th></tr>
+<tr><td><code>arc_length</code></td><td>short arcs at junctions are easy to confuse</td><td class="n">1</td></tr>
+<tr><td><code>heading_diff</code></td><td>GPS bearing vs arc bearing (0–180°). Separates parallel roads and the two directions of a two-way road</td><td class="n">2</td></tr>
+<tr><td><code>proj_frac</code></td><td>where along the arc the point projects (0–1)</td><td class="n">3</td></tr>
+<tr><td><code>speed</code></td><td>at low speed the heading is unreliable</td><td class="n">4</td></tr>
+<tr><td><code>dist</code></td><td>perpendicular distance to the arc in metres: the main noise signal</td><td class="n">5</td></tr>
+<tr><td><code>dist_gap_nearest</code></td><td>how much farther than the nearest candidate</td><td class="n">6</td></tr>
+<tr><td><code>in_deg</code>, <code>out_deg</code></td><td>junction complexity around the arc</td><td class="n">7–8</td></tr>
+<tr><td><code>dist_rank</code></td><td>0 = nearest candidate; relative closeness matters in dense areas</td><td class="n">9</td></tr>
+<tr><td><code>n_cand</code></td><td>number of arcs within 50 m: how ambiguous the area is</td><td class="n">10</td></tr>
+<tr><td><code>conn_prev_nearest</code></td><td>arc continues from the previous point's nearest arc: cheap sequential context</td><td class="n">11</td></tr>
+<tr><td><code>off_end</code></td><td>point projects beyond the end of the arc, so it probably belongs to the next one</td><td class="n">12</td></tr>
+<tr><td><code>dt</code></td><td>seconds since the previous fix; after a gap the position is less reliable</td><td class="n">13</td></tr>
+</table></div>
+<p><b>Dropped / not used as features (6 columns):</b> raw <code>lon</code>, <code>lat</code> and timestamp <code>t</code> (they describe <i>where/when</i> the trip is, not whether an arc matches, and would not generalise to new trips), <code>trip</code>, <code>point</code> and <code>arc</code> ids (identifiers, leak trip identity). <code>label</code> and <code>true_arc</code> are targets. We did not drop any of the 13 engineered features after training.</p>
+<p><b>Scaling:</b> StandardScaler fitted on train only, used for LogReg, KNN and MLP. Trees don't need it.</p>
+
+<h2 id="models">The 5 models <span class="owner">Vedant Srivastava (choice) · Vaibhav (comparison)</span></h2>
+<p>One model from each of five different algorithm families, so the comparison says something about the problem.</p>
+<div class="tbl"><table>
+<tr><th>Model</th><th>Family</th><th>Hyperparameters</th><th>Loss / objective</th></tr>
+<tr><td>Logistic Regression</td><td>linear, probabilistic</td><td>C = 1.0, L2 penalty, solver lbfgs, max_iter 1000, class_weight balanced</td><td>log loss (cross-entropy)</td></tr>
+<tr><td>KNN</td><td>instance-based</td><td>k = 25, distance-weighted, Euclidean on scaled features; trained on 150k-row subsample (prediction cost)</td><td>none (lazy learner, majority vote)</td></tr>
+<tr><td>Random Forest</td><td>bagging ensemble</td><td>200 trees, max_depth 16, min_samples_leaf 5, max_features √n (default), class_weight balanced_subsample</td><td>Gini impurity per split</td></tr>
+<tr><td>LightGBM</td><td>gradient boosting</td><td>400 trees, learning_rate 0.05, num_leaves 63, subsample 0.8, colsample_bytree 0.8, is_unbalance</td><td>binary log loss</td></tr>
+<tr><td>MLP</td><td>neural network</td><td><b>2 hidden layers: 64 and 32 neurons</b>, ReLU, Adam (lr 0.001), L2 alpha 1e-4, batch 512, early stopping (10% validation, patience 10), max 60 epochs, stopped at 35; 400k-row subsample</td><td>log loss</td></tr>
+</table></div>
+<h3>Results (CV = 5-fold GroupKFold on train; test = 10 student-test trips)</h3>
+<div class="tbl"><table>
+<tr><th>Model</th><th>CV macro-F1</th><th>Test macro-F1</th><th>Test log loss</th><th>Test Top-1</th><th>Continuity</th><th>Train s</th><th>ms / 1k rows</th></tr>
+<tr><td>LogReg</td><td class="n">0.901 ± 0.009</td><td class="n">0.893</td><td class="n">0.195</td><td class="n">0.867</td><td class="n">0.933</td><td class="n">2.2</td><td class="n">0.14</td></tr>
+<tr><td>KNN</td><td class="n">0.924 ± 0.009</td><td class="n">0.916</td><td class="n">0.320</td><td class="n">0.864</td><td class="n">0.929</td><td class="n">0.3</td><td class="n">345.6</td></tr>
+<tr><td>Random Forest</td><td class="n">0.921 ± 0.008</td><td class="n">0.914</td><td class="n">0.147</td><td class="n">0.870</td><td class="n">0.929</td><td class="n">76.7</td><td class="n">3.2</td></tr>
+<tr><td><b>LightGBM</b></td><td class="n">0.917 ± 0.008</td><td class="n">0.910</td><td class="n">0.152</td><td class="n best">0.875</td><td class="n">0.931</td><td class="n">7.4</td><td class="n">6.0</td></tr>
+<tr><td>MLP</td><td class="n best">0.925 ± 0.009</td><td class="n best">0.920</td><td class="n best">0.125</td><td class="n">0.871</td><td class="n">0.932</td><td class="n">25.9</td><td class="n">0.56</td></tr>
+</table></div>
+<ul>
+<li><b>Top-1</b>: for each GPS point take the candidate with the highest probability; correct if it is the reference arc.</li>
+<li><b>Continuity</b>: share of consecutive predictions that are the same arc or physically connected (next arc starts where the previous ends).</li>
+<li><b>Macro-F1</b>: F1 of the positive and negative class averaged, at threshold 0.5.</li>
+</ul>
+
+<h2 id="overfit">How we prevented overfitting</h2>
+<ul>
+<li><b>GroupKFold by trip</b>: all points of a trip stay in one fold. Consecutive GPS points are almost identical, so random splitting would leak.</li>
+<li><b>Separate student-test trips</b> for comparison; evaluator trips never touched.</li>
+<li>Per model: LogReg L2 (C=1); KNN large k = 25; RF max_depth 16 and min_samples_leaf 5; LightGBM row/column subsampling 0.8 and small learning rate; MLP L2 alpha and early stopping on a validation split.</li>
+<li><b>Evidence:</b> CV and test macro-F1 differ by ≤ 0.008 for every model and fold std is ≤ 0.009. No model overfits. LogReg is slightly underfit (lowest scores: it can't learn interactions like “close but wrong direction”).</li>
+<li>Class imbalance (17% positive) handled with class weights, not resampling.</li>
+</ul>
+
+<h2 id="pick">Final pick: LightGBM <span class="owner">Vaibhav</span></h2>
+<ul>
+<li><b>Primary metric: student-test Top-1.</b> The route is built from the top candidate at every point, so that's what matters. F1 at a 0.5 threshold doesn't measure it.</li>
+<li>LightGBM has the best Top-1 (0.875). Its log loss (0.152) is close to the best, so its probabilities are good enough as HMM emissions.</li>
+<li>Trains 10× faster than Random Forest (7 s vs 77 s) and is 3 MB instead of 195 MB, which suits the API and Bayesian tuning.</li>
+<li>MLP is the runner-up: best log loss and F1, but 0.4 points lower Top-1.</li>
+<li>KNN rejected: worst log loss (0.32, coarse probabilities) and ~60× slower inference than LightGBM.</li>
+<li>Training accuracy was not used to choose: all models are within ~1% of each other, so we used held-out trips.</li>
+</ul>
+
+<h2 id="tune">Bayesian hyperparameter tuning <span class="owner">Vaibhav</span></h2>
+<ul>
+<li><b>Method:</b> Optuna with the <b>TPE sampler</b> (Tree-structured Parzen Estimator). TPE models which parameter values gave good scores and which gave bad ones, and samples where the ratio good/bad is highest. Each trial learns from earlier ones. Grid and random search do not.</li>
+<li>First 10 trials are random exploration (TPE's startup), the rest are guided. Seed 42. Trial 0 is the untuned configuration, for a fair comparison.</li>
+<li><b>Objective:</b> maximise mean observation-level Top-1 over 3-fold GroupKFold on the 78 clean train trips. Student-test is used only to compare tuned vs untuned afterwards.</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>Hyperparameter</th><th>Range</th><th>Why</th></tr>
+<tr><td>n_estimators</td><td>100–1000, step 50</td><td>number of boosting rounds</td></tr>
+<tr><td>learning_rate</td><td>0.01–0.2, log</td><td>step size; trades off with n_estimators</td></tr>
+<tr><td>num_leaves</td><td>15–255, log</td><td>tree complexity; main overfitting control</td></tr>
+<tr><td>min_child_samples</td><td>10–300, log</td><td>minimum rows per leaf; regularisation</td></tr>
+<tr><td>subsample</td><td>0.5–1.0</td><td>row sampling per tree</td></tr>
+<tr><td>colsample_bytree</td><td>0.4–1.0</td><td>feature sampling per tree</td></tr>
+<tr><td>reg_lambda</td><td>0.001–10, log</td><td>L2 penalty on leaf weights</td></tr>
+</table></div>
+<div id="tune-results">
+<h3>Results: 40 trials, 1,012 s (≈17 min), best = trial 25</h3>
+<div class="tbl"><table>
+<tr><th>Parameter</th><th>Untuned</th><th>Tuned (best)</th></tr>
+<tr><td>n_estimators</td><td class="n">400</td><td class="n">550</td></tr>
+<tr><td>learning_rate</td><td class="n">0.05</td><td class="n">0.0317</td></tr>
+<tr><td>num_leaves</td><td class="n">63</td><td class="n">229</td></tr>
+<tr><td>min_child_samples</td><td class="n">20</td><td class="n">59</td></tr>
+<tr><td>subsample</td><td class="n">0.8</td><td class="n">0.597</td></tr>
+<tr><td>colsample_bytree</td><td class="n">0.8</td><td class="n">0.524</td></tr>
+<tr><td>reg_lambda</td><td class="n">≈0</td><td class="n">0.683</td></tr>
+</table></div>
+<div class="tbl"><table>
+<tr><th>Metric</th><th>Untuned</th><th>Tuned</th></tr>
+<tr><td>CV Top-1 (objective)</td><td class="n">0.8836</td><td class="n best">0.8844</td></tr>
+<tr><td>CV macro-F1</td><td class="n">0.9182</td><td class="n best">0.9218</td></tr>
+<tr><td>CV log loss</td><td class="n">0.1436</td><td class="n best">0.1379</td></tr>
+<tr><td>Student-test Top-1</td><td class="n best">0.8745</td><td class="n">0.8732</td></tr>
+<tr><td>Student-test macro-F1</td><td class="n">0.9107</td><td class="n best">0.9109</td></tr>
+<tr><td>Student-test log loss</td><td class="n">0.1517</td><td class="n best">0.1471</td></tr>
+<tr><td>Student-test Top-1 after HMM (β=50)</td><td class="n">0.9019</td><td class="n">0.9016</td></tr>
+<tr><td>Train time / inference</td><td class="n best">6.9 s / 3.6 ms per 1k</td><td class="n">13.9 s / 8.0 ms per 1k</td></tr>
+</table></div>
+<ul>
+<li><b>Did tuning help?</b> Only slightly. CV Top-1 +0.08 points, CV F1 +0.4 points, log loss 4% lower on both CV and test. Student-test Top-1 is 0.13 points lower and equal after the HMM. The defaults were already near-optimal; the gain is mostly better-calibrated probabilities.</li>
+<li><b>Final model = tuned</b>, chosen on the objective we optimised (CV on train) and on log loss, not on the student-test number. The test differences are within noise (10 trips).</li>
+<li><b>Most important hyperparameters</b> (Optuna fANOVA): n_estimators 35%, num_leaves 34%, learning_rate 17%; the others under 6% each.</li>
+<li>Tuned trees are bigger (229 leaves) but more regularised (fewer rows/columns per tree, larger leaves, L2 0.68), so no overfitting: CV and test log loss both improved.</li>
+<li>Cost: 40 trials × 3 folds = 120 fits ≈ 17 min on 12 cores. Files: <code>results/optuna_trials.csv</code>, <code>results/tuning_comparison.csv</code>, <code>results/plots/optuna_history.png</code>, <code>models/final_config.json</code>.</li>
+</ul>
+</div>
+
+<h2 id="hmm">HMM and Viterbi <span class="owner">Venkatesh</span></h2>
+<p>The classifier scores each point independently, so consecutive predictions can jump between unconnected roads. The HMM chooses the most likely <i>connected</i> sequence.</p>
+<ul>
+<li><b>Hidden states:</b> the candidate arcs of each GPS point (up to 8 per point).</li>
+<li><b>Observations:</b> the GPS points.</li>
+<li><b>Emission:</b> log P(arc is correct) from LightGBM.</li>
+<li><b>Transition:</b> compares the driving distance between the two candidates (Dijkstra shortest path on the directed network, up to 1.5 km) with the straight-line GPS distance. If the vehicle really drove that arc pair, the two distances are similar. Unreachable pairs get probability 0.</li>
+</ul>
+<div class="formula">log A(i→j) = −| d_network(i, j) − d_gps(t−1, t) | / β      (β multiplied by the time gap dt)
+δ_t(j)     = max_i [ δ_{t−1}(i) + log A(i→j) ] + log B_t(j)
+then backtrack the stored argmax pointers from the best final state</div>
+<ul>
+<li><b>Gaps:</b> β grows with dt, so after a long gap larger detours are allowed.</li>
+<li><b>Disconnected roads / no valid transition:</b> the chain breaks and Viterbi restarts from that point (0.6 breaks per trip on average).</li>
+<li><b>Points without candidates</b> are skipped.</li>
+<li><b>β chosen on student-test</b> (swept 2, 5, 10, 20, 50); β = 50 gave the best Top-1.</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>Student-test (mean of 10 trips)</th><th>Top-1</th><th>Continuity</th><th>Route F1</th></tr>
+<tr><td>LightGBM only</td><td class="n">0.889</td><td class="n">0.931</td><td class="n">0.870</td></tr>
+<tr><td>+ HMM β = 10</td><td class="n">0.896</td><td class="n best">0.973</td><td class="n best">0.902</td></tr>
+<tr><td>+ HMM β = 50</td><td class="n best">0.902</td><td class="n">0.966</td><td class="n">0.900</td></tr>
+</table></div>
+<p class="mute">Main effect is continuity: invalid jumps drop from 6.9% to about 3%. It cannot fix points whose true arc is not among the candidates. About 0.5 s per trip.</p>
+
+<h2 id="deploy">API and UI <span class="owner">Vedant Sharma (API) · Vedant Srivastava (UI)</span></h2>
+<ul>
+<li><b>Laptop 1:</b> <code>uv run uvicorn api.main:app --host 0.0.0.0 --port 8000</code>. <code>--host 0.0.0.0</code> makes it reachable from the other laptop. The evaluator trips folder is set with <code>PATHSNAP_EVAL_DIR</code>.</li>
+<li><b>Endpoints:</b> <code>GET /health</code>, <code>GET /trips</code> (lists trip ids), <code>POST /predict {"trip_id": "..."}</code>.</li>
+<li><b>/predict pipeline:</b> load track, nodes, arcs (not the route) → clean → candidates → 13 features → LightGBM probabilities → Viterbi → predicted arcs. Then the server reads the reference route and computes accuracy. It returns GPS points, the predicted route geometry and the metrics. The reference route never leaves the server.</li>
+<li><b>Logs:</b> every request prints the trip id, classifier and HMM Top-1, continuity, route F1 and time. Keep this terminal visible for the examiner.</li>
+<li><b>Laptop 2:</b> <code>cd ui &amp;&amp; python3 -m http.server 5500</code>, open <code>http://localhost:5500/?api=http://&lt;laptop1-ip&gt;:8000</code>. The UI lists the trips, sends the chosen id, draws GPS (blue), classifier-only (orange) and HMM route (red) on a Leaflet map with a metrics table.</li>
+<li>CORS is enabled so the browser on laptop 2 may call laptop 1. Leaflet is bundled locally, so the UI works without internet (map tiles need internet; the route still draws without them).</li>
+<li>Typical time per trip: 1–5 s.</li>
+</ul>
+
+<h2 id="qa">Rapid-fire Q&amp;A</h2>
+<div class="qa">
+<details><summary>What is a .track file? What is an .arc?</summary><p>.track = GPS fixes: longitude, latitude, timestamp in seconds, ~1 per second. .arcs = directed road segments, each a pair (from_node, to_node) indexing rows of .nodes; the row number is the arc id that .route refers to.</p></details>
+<details><summary>How many features did you make? How many dropped?</summary><p>13 engineered per (point, candidate). None of the 13 dropped after training. Not used as features: raw lon, lat, timestamp, and trip/point/arc ids (6 columns), because they identify the trip rather than describe the match.</p></details>
+<details><summary>Most important feature?</summary><p>By LightGBM split count: arc_length, then heading_diff, proj_frac, speed, dist. Split count favours continuous features; distance and heading are what physically separate the right road from its neighbours.</p></details>
+<details><summary>How many hidden layers in the MLP?</summary><p>Two: 64 and 32 neurons, ReLU, Adam, early stopping. It stopped after 35 epochs.</p></details>
+<details><summary>Random Forest depth? Number of trees?</summary><p>max_depth 16, 200 trees, min_samples_leaf 5, √(13) ≈ 3 features per split.</p></details>
+<details><summary>LightGBM parameters?</summary><p>Untuned: 400 trees, lr 0.05, 63 leaves, subsample 0.8, colsample 0.8. Tuned (final): 550 trees, lr 0.032, 229 leaves, min_child_samples 59, subsample 0.60, colsample 0.52, reg_lambda 0.68.</p></details>
+<details><summary>How many tuning trials? Did tuning improve the model?</summary><p>40 TPE trials, 17 minutes. Small improvement in CV Top-1 (0.8836 → 0.8844) and log loss (−4%); student-test Top-1 essentially unchanged. We report this honestly: the defaults were already good.</p></details>
+<details><summary>Value of k in KNN and why?</summary><p>k = 25 with distance weighting: smooths noisy labels and gives less jumpy probabilities. Trained on 150k rows because predicting means comparing with every stored row.</p></details>
+<details><summary>Why GroupKFold and not KFold?</summary><p>Points within a trip are strongly correlated. KFold would put neighbouring points in train and validation, inflating scores.</p></details>
+<details><summary>Why Top-1 and not accuracy as main metric?</summary><p>Row accuracy is inflated by the many easy negatives (83% of rows). Top-1 measures what we need: picking the right road for every GPS point.</p></details>
+<details><summary>Why UTM?</summary><p>We need distances in metres. In degrees, a step east and a step north of the same size are different distances at 35°N.</p></details>
+<details><summary>Why is this classification and not regression?</summary><p>We decide for each candidate road whether it is the true one. The probabilities rank candidates and feed the HMM.</p></details>
+<details><summary>Why Bayesian and not grid search?</summary><p>Each trial takes ~30 s. TPE uses earlier results to choose the next point, so it finds good regions in fewer trials than grid or random.</p></details>
+<details><summary>How do you handle class imbalance?</summary><p>17% positives. class_weight balanced (LogReg, RF), is_unbalance (LightGBM). Top-1 per point is insensitive to the threshold anyway.</p></details>
+<details><summary>Limitations?</summary><p>Labels come from aligning GPS to an untimed route, so they are approximate near junctions. Two trips had GPS far from the route. Arcs are treated as straight lines. 2% of train points have no correct candidate.</p></details>
+<details><summary>Is the ground truth used in prediction?</summary><p>No. The API loads the route only after prediction to compute accuracy (<code>load_trip_dir</code> sets route to None and <code>predict_trip</code> asserts it).</p></details>
+</div>
+</div>
