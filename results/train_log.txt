@@ -1,0 +1,24 @@
+excluded train trips (median GPS-route offset > 50 m): ['00000033', '00000054']
+== LogReg
+{'model': 'LogReg', 'family': 'Linear / probabilistic', 'config': 'C=1, balanced, L2', 'cv_macro_f1': np.float64(0.9013880825960376), 'cv_macro_f1_std': np.float64(0.008609461938407514), 'cv_log_loss': np.float64(0.18617026631942402), 'test_accuracy': 0.9317335578632239, 'test_precision': 0.7490167885989766, 'test_recall': 0.9285938974520289, 'test_macro_f1': 0.8932681383698173, 'test_log_loss': 0.19491269520752225, 'test_top1': 0.8672339981204971, 'route_continuity': np.float64(0.9328658661048148), 'train_time_s': 2.177582263946533, 'infer_time_ms_per_1k_rows': 0.1394377308817951, 'tn': np.int64(81881), 'fp': np.int64(5935), 'fn': np.int64(1362), 'tp': np.int64(17712)}
+== KNN
+{'model': 'KNN', 'family': 'Instance-based', 'config': 'k=25, distance-weighted, scaled, 150k-row subsample', 'cv_macro_f1': np.float64(0.9236043276713621), 'cv_macro_f1_std': np.float64(0.008879909944086125), 'cv_log_loss': np.float64(0.34366805572115455), 'test_accuracy': 0.9504911591355599, 'test_precision': 0.8595054257095158, 'test_recall': 0.8637412184124987, 'test_macro_f1': 0.915735398838995, 'test_log_loss': 0.32004769387665766, 'test_top1': 0.8636838258327242, 'route_continuity': np.float64(0.9292180271741852), 'train_time_s': 0.2748849391937256, 'infer_time_ms_per_1k_rows': 345.6014167806344, 'tn': np.int64(85123), 'fp': np.int64(2693), 'fn': np.int64(2599), 'tp': np.int64(16475)}
+== RandomForest
+{'model': 'RandomForest', 'family': 'Ensemble (bagging)', 'config': '200 trees, depth 16, leaf 5, balanced', 'cv_macro_f1': np.float64(0.9214113786993116), 'cv_macro_f1_std': np.float64(0.008175048684905178), 'cv_log_loss': np.float64(0.1394218943121895), 'test_accuracy': 0.9466835064084573, 'test_precision': 0.8054629333576943, 'test_recall': 0.9245045611827619, 'test_macro_f1': 0.9139550943642081, 'test_log_loss': 0.1473375818514329, 'test_top1': 0.8696355852563433, 'route_continuity': np.float64(0.9287061626198252), 'train_time_s': 76.69920229911804, 'infer_time_ms_per_1k_rows': 3.2114306762249925, 'tn': np.int64(83557), 'fp': np.int64(4259), 'fn': np.int64(1440), 'tp': np.int64(17634)}
+== LightGBM
+{'model': 'LightGBM', 'family': 'Boosting', 'config': '400 trees, lr 0.05, 63 leaves, unbalance-aware', 'cv_macro_f1': np.float64(0.9169323270073917), 'cv_macro_f1_std': np.float64(0.008334272517483449), 'cv_log_loss': np.float64(0.14496564389505284), 'test_accuracy': 0.9438020394798391, 'test_precision': 0.7913489409141583, 'test_recall': 0.9303764286463249, 'test_macro_f1': 0.9101910345855715, 'test_log_loss': 0.15176558821831088, 'test_top1': 0.8751696773519891, 'route_continuity': np.float64(0.9306513194735697), 'train_time_s': 7.353285551071167, 'infer_time_ms_per_1k_rows': 6.0036336531395085, 'tn': np.int64(83137), 'fp': np.int64(4679), 'fn': np.int64(1328), 'tp': np.int64(17746)}
+== MLP
+/HDD/lab/College/Year-3/Sem-5/ML/Hackathon/ml-hackathon-pathsnap-5/.venv/lib/python3.12/site-packages/sklearn/neural_network/_multilayer_perceptron.py:785: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (60) reached and the optimization hasn't converged yet.
+  warnings.warn(
+/HDD/lab/College/Year-3/Sem-5/ML/Hackathon/ml-hackathon-pathsnap-5/.venv/lib/python3.12/site-packages/sklearn/neural_network/_multilayer_perceptron.py:785: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (60) reached and the optimization hasn't converged yet.
+  warnings.warn(
+{'model': 'MLP', 'family': 'Neural network', 'config': '64-32 ReLU, adam, early stopping, 400k-row subsample', 'cv_macro_f1': np.float64(0.9247748763657355), 'cv_macro_f1_std': np.float64(0.009336089870287887), 'cv_log_loss': np.float64(0.12576005938432738), 'test_accuracy': 0.9530545420525774, 'test_precision': 0.8673042751123654, 'test_recall': 0.8700325049806019, 'test_macro_f1': 0.9200426903987735, 'test_log_loss': 0.12479450009286094, 'test_top1': 0.8707319619922732, 'route_continuity': np.float64(0.9320108292743032), 'train_time_s': 25.88876724243164, 'infer_time_ms_per_1k_rows': 0.5599635835558898, 'tn': np.int64(85277), 'fp': np.int64(2539), 'fn': np.int64(2479), 'tp': np.int64(16595)}
+miss rate (test): 0.0042
+          model  cv_macro_f1  ...  test_top1  route_continuity
+0        LogReg     0.901388  ...   0.867234          0.932866
+1           KNN     0.923604  ...   0.863684          0.929218
+2  RandomForest     0.921411  ...   0.869636          0.928706
+3      LightGBM     0.916932  ...   0.875170          0.930651
+4           MLP     0.924775  ...   0.870732          0.932011
+
+[5 rows x 6 columns]
