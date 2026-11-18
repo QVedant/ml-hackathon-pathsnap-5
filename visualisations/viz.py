@@ -6,7 +6,7 @@ from scipy.spatial import cKDTree
 
 def trip_map(trip, pred_arcs=None, network_radius_m=150, title=""):
     tr, nodes, arcs = trip["track"], trip["nodes"], trip["arcs"]
-    m = folium.Map(location=[tr.lat.mean(), tr.lon.mean()], zoom_start=14, tiles="cartodbpositron")
+    m = folium.Map(location=[tr.lat.mean(), tr.lon.mean()], zoom_start=14, tiles="OpenStreetMap")
     # road network near the trajectory only (full network is up to 300k arcs)
     lat0 = np.radians(tr.lat.mean())
     sc = np.array([111320 * np.cos(lat0), 110540])
