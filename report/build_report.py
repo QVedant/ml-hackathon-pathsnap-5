@@ -397,7 +397,7 @@ p("These results come from the API at demonstration time. No modelling decision 
 # 8
 h("8. Output Screenshots", 1)
 screenshot(S / "api_terminal.png", "Uvicorn log on laptop 1 serving evaluator trips", 2)
-screenshot(P / "ui_screenshot.png", "Evaluator UI with trip 00000067 matched", 2, 13)
+screenshot(P / "ui_screenshot.png", "Evaluator UI on laptop 2 with trip 00000030 matched", 2, 16.5)
 
 # 9
 h("9. Limitations and AI Assistance", 1)

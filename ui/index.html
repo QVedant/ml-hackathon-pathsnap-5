@@ -25,6 +25,8 @@ button,input{font:inherit;color:inherit}
 /* layout: full-bleed map, floating top bar + sidebar */
 #map{position:fixed;inset:0;background:#0d1320}
 .leaflet-container{background:#0d1320;font-family:var(--ui)}
+/* OSM tiles darkened to match the theme */
+.leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(.9) saturate(.55)}
 .leaflet-control-zoom a{background:var(--panel-solid)!important;color:var(--fg)!important;border-color:var(--line)!important}
 .leaflet-control-attribution{background:rgba(11,15,23,.7)!important;color:var(--dim)!important}
 .leaflet-control-attribution a{color:var(--mute)!important}
@@ -148,7 +150,7 @@ $('api').value = API.replace(/^https?:\/\//,'');
 
 const map = L.map('map',{zoomControl:false,preferCanvas:true}).setView([30,20],2);
 L.control.zoom({position:'bottomright'}).addTo(map);
-L.tileLayer('https://{s}.basemap.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:20}).addTo(map);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:19}).addTo(map);
 
 const layers = {}; const visible = {gps:true, clf:false, hmm:true};
 const results = {};
@@ -240,5 +242,6 @@ function toggle(c){
 }
 $('connect').onclick = connect;
 $('api').addEventListener('keydown', e=>{ if(e.key==='Enter') connect(); });
-connect();
+const autoTrip = new URLSearchParams(location.search).get('trip');
+connect().then(()=>{ if(autoTrip && $('t'+autoTrip)) run(autoTrip); });
 </script></body></html>
