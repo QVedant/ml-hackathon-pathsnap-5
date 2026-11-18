@@ -1,0 +1,67 @@
+{
+ "trip_id": "00000087",
+ "n_points": 1399,
+ "n_no_candidate": 0,
+ "hmm_breaks": 0,
+ "processing_time_s": 2.86,
+ "model": "final_lgbm.joblib",
+ "gps": [
+  [
+   43.480085,
+   3.675732
+  ],
+  [
+   43.480097,
+   3.674918
+  ]
+ ],
+ "predicted_route": [
+  [
+   [
+    43.48008,
+    3.675754
+   ],
+   [
+    43.480037,
+    3.674627
+   ]
+  ]
+ ],
+ "classifier_route": [
+  [
+   [
+    43.48008,
+    3.675754
+   ],
+   [
+    43.480037,
+    3.674627
+   ]
+  ]
+ ],
+ "predicted_arc_ids": [
+  117,
+  78757,
+  39708,
+  39706,
+  78755
+ ],
+ "metrics": {
+  "classifier": {
+   "top1_accuracy": 0.9421015010721944,
+   "coverage": 1.0,
+   "route_continuity": 0.9391988555078684,
+   "route_precision": 0.8942917547568711,
+   "route_recall": 0.9296703296703297,
+   "route_f1": 0.9116379310344829
+  },
+  "hmm": {
+   "top1_accuracy": 0.9949964260185847,
+   "coverage": 1.0,
+   "route_continuity": 0.9892703862660944,
+   "route_precision": 1.0,
+   "route_recall": 0.9626373626373627,
+   "route_f1": 0.9809630459126539
+  }
+ }
+}

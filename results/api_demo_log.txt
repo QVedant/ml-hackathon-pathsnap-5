@@ -1,0 +1,19 @@
+2026-11-18 16:24:20,759 [PathSnap] loaded model final_lgbm.joblib | eval dir /HDD/lab/College/Year-3/Sem-5/ML/Hackathon/eval_data/evaluator_test | HMM {'beta': 50.0}
+INFO:     Started server process [101308]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8011 (Press CTRL+C to quit)
+INFO:     127.0.0.1:41600 - "GET /health HTTP/1.1" 200 OK
+2026-11-18 16:24:21,144 [PathSnap] POST /predict trip=00000087 : running pipeline
+2026-11-18 16:24:24,727 [PathSnap] trip=00000087 points=1399 | classifier top1=0.9421 | HMM top1=0.9950 continuity=0.9893 route_f1=0.9810 | 3.58s
+INFO:     127.0.0.1:41614 - "POST /predict HTTP/1.1" 200 OK
+2026-11-18 16:24:24,743 [PathSnap] POST /predict trip=00000030 : running pipeline
+2026-11-18 16:24:26,361 [PathSnap] trip=00000030 points=654 | classifier top1=0.7859 | HMM top1=0.8410 continuity=0.8928 route_f1=0.7886 | 1.62s
+INFO:     127.0.0.1:41620 - "POST /predict HTTP/1.1" 200 OK
+2026-11-18 16:24:26,382 [PathSnap] POST /predict trip=00000087 : running pipeline
+2026-11-18 16:24:29,238 [PathSnap] trip=00000087 points=1399 | classifier top1=0.9421 | HMM top1=0.9950 continuity=0.9893 route_f1=0.9810 | 2.86s
+INFO:     127.0.0.1:41636 - "POST /predict HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [101308]
