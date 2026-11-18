@@ -2,12 +2,12 @@
 All numbers are from `results/` in this repository. Partitions: 80 train trips (fit + 5-fold GroupKFold CV by trip), 10 student-test trips (comparison and decoder tuning). Evaluator trips were not used.
 
 ---
-## Slide 1 — Problem and data (Vedant Srivastava)
+## Slide 1 — Problem and data (Vedant Sharma)
 - Input: noisy GPS `.track` (lon, lat, t). Each trip has its own road network: `.nodes` (lon, lat) and directed `.arcs` (from, to). `.route` is the ordered list of true arc ids, with no timestamps.
 - A GPS row does **not** map to a route row, so we have to create per-point labels ourselves.
 - Size: train has 208,417 GPS points and 3.9 M arcs in total. Networks range from 649 to 307,392 arcs. Student-test has 19,160 points.
 
-## Slide 2 — EDA findings (Vedant Srivastava) · `notebooks/01_eda.ipynb`, `maps/eda_trip_00000099.html`
+## Slide 2 — EDA findings (Vedant Sharma) · `notebooks/01_eda.ipynb`, `maps/eda_trip_00000099.html`
 - 0 missing values, 0 duplicate timestamps, 0 out-of-order timestamps.
 - 94.3% of steps are exactly 1 s. There are 1,216 gaps longer than 5 s in train. Some trips have very long gaps (stops or signal loss).
 - Network: about 95% of arcs are two-way (A→B and B→A both exist), so heading is essential. On average the largest weakly connected component holds 97% of nodes.
@@ -48,7 +48,7 @@ Problem framing: **binary classification per (point, candidate)**, giving P(this
 - Overfitting check: CV and test F1 are within about 0.01 for every model, so there is no overfitting. Trips never cross folds (GroupKFold).
 - Training data: KNN was trained on a 150k-row subsample and MLP on 400k (cost). The other models used all about 1 M rows.
 
-## Slide 6 — HMM and Viterbi (Venkatesh, Vedant Sharma) · `results/hmm_summary_LightGBM.csv`, `plots/hmm_vs_classifier.png`, `maps/hmm_*.html` vs `maps/clf_*.html`
+## Slide 6 — HMM and Viterbi (Venkatesh, Vedant Srivastava) · `results/hmm_summary_LightGBM.csv`, `plots/hmm_vs_classifier.png`, `maps/hmm_*.html` vs `maps/clf_*.html`
 - Hidden states: the candidate arcs of each GPS point. Emission: log P from LightGBM.
 - Transition: `−|d_network − d_gps| / β`, where d_network is the Dijkstra shortest path along directed arcs (cutoff 1.5 km). An unreachable arc gets −∞, so impossible jumps are forbidden. For gaps, β is multiplied by dt.
 - Recurrence: δ_t(j) = max_i [δ_{t−1}(i) + log A_ij] + log B_t(j), then backtrack. If every transition is −∞, the chain breaks and restarts (0.6 breaks per trip on average).

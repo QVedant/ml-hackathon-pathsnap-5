@@ -24,9 +24,9 @@ uv run jupyter lab notebooks/01_eda.ipynb # EDA
 | `src/candidates.py` | road network, KD-tree candidate generation (K=8, R=50 m), point→route labels | Venkatesh |
 | `src/features.py` | per (point, candidate) features | Venkatesh |
 | `src/hmm.py`, `src/run_hmm.py` | HMM + Viterbi decoding and evaluation | Venkatesh |
-| `notebooks/01_eda.ipynb`, `src/viz.py` | EDA, Folium maps | Vedant Srivastava |
+| `notebooks/01_eda.ipynb`, `src/viz.py` | EDA, Folium maps | Vedant Sharma |
 | `src/train_models.py` | LogReg, KNN, RandomForest, LightGBM, MLP | Vaibhav |
-| `src/evaluate.py`, `src/plots.py` | metrics, plots | Vedant Sharma |
+| `src/evaluate.py`, `src/plots.py` | metrics, plots | Vedant Srivastava |
 | `results/` | CSV results, plots · `maps/` Folium HTML · `models/` saved models | |
 
 Data partitions: 80 train trips (fit + GroupKFold CV), 10 student_test trips (model comparison, decoder tuning). Evaluator trips are never used in development.
