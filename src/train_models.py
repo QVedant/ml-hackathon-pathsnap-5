@@ -21,6 +21,7 @@ from .io import load_trip
 from .candidates import Network
 
 SEED = 42
+MAX_ROUTE_OFFSET_M = 50.0
 rng = np.random.default_rng(SEED)
 
 # name -> (family, factory, max training rows (None = all), config text)
@@ -54,6 +55,11 @@ def subsample(df, n):
 
 def main():
     tr = pd.read_parquet("results/features_train.parquet")
+    # data-quality filter: trips whose GPS lies far from its own reference route (bad labels)
+    q = pd.read_csv("results/candidates_train.csv", dtype={"trip": str})
+    bad = q.loc[q.median_gps_to_route_m > MAX_ROUTE_OFFSET_M, "trip"].tolist()
+    print("excluded train trips (median GPS-route offset > 50 m):", bad)
+    tr = tr[~tr.trip.isin(bad)].reset_index(drop=True)
     te = pd.read_parquet("results/features_test.parquet")
     nets = {t: Network(**{k: v for k, v in load_trip(t, "test").items() if k in ("nodes", "arcs")})
             for t in te.trip.unique()}
