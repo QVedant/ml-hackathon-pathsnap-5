@@ -1,13 +1,23 @@
-"""Geometry helpers: lon/lat -> metres (UTM 53N, the zone covering the dataset near Kyoto). Owner: Venkatesh."""
+"""Geometry helpers. Owner: Venkatesh.
+Trips are spread worldwide (lon -100..138), so each trip is projected to ITS OWN UTM zone, chosen from the
+centre of its road network. Within one zone UTM distance error is < 0.1%; one fixed zone gave 14-57% error."""
 import numpy as np
 from pyproj import Transformer
 
-_T = Transformer.from_crs("EPSG:4326", "EPSG:32653", always_xy=True)
+
+def utm_epsg(lon, lat):
+    zone = int((float(lon) + 180) // 6) + 1
+    return (32600 if lat >= 0 else 32700) + zone
 
 
-def to_xy(lon, lat):
-    x, y = _T.transform(np.asarray(lon), np.asarray(lat))
-    return np.asarray(x), np.asarray(y)
+class Projector:
+    def __init__(self, lon0, lat0):
+        self.epsg = utm_epsg(lon0, lat0)
+        self._t = Transformer.from_crs("EPSG:4326", f"EPSG:{self.epsg}", always_xy=True)
+
+    def __call__(self, lon, lat):
+        x, y = self._t.transform(np.asarray(lon), np.asarray(lat))
+        return np.asarray(x), np.asarray(y)
 
 
 def bearing(dx, dy):

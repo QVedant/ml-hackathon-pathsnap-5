@@ -43,7 +43,7 @@ Backup: if laptop 2 fails, the UI is also served by the API at `http://<laptop1-
 ## Layout
 | Path | Content | Owner |
 |---|---|---|
-| `src/io.py`, `src/geo.py` | loading, cleaning, UTM-53N projection | Venkatesh |
+| `src/io.py`, `src/geo.py` | loading, cleaning, per-trip UTM projection | Venkatesh |
 | `src/candidates.py` | road network, KD-tree candidate generation (K=8, R=50 m), point→route labels | Venkatesh |
 | `src/features.py` | per (point, candidate) features | Venkatesh |
 | `src/hmm.py`, `src/run_hmm.py`, `src/pipeline.py` | HMM + Viterbi, end-to-end inference | Venkatesh |

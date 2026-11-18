@@ -4,7 +4,7 @@ import sys, time
 import numpy as np
 import pandas as pd
 from .io import load_trip, clean_track, trip_ids
-from .geo import to_xy, bearing, angle_diff
+from .geo import bearing, angle_diff
 from .candidates import Network, label_points
 
 K, RADIUS = 8, 50.0
@@ -27,7 +27,7 @@ def track_kinematics(px, py, t):
 def trip_frame(trip, k=K, radius=RADIUS, with_labels=True, net=None):
     net = net or Network(trip["nodes"], trip["arcs"])
     tr = clean_track(trip["track"], trip["nodes"])
-    px, py = to_xy(tr.lon.values, tr.lat.values)
+    px, py = net.proj(tr.lon.values, tr.lat.values)
     hd, speed, dt = track_kinematics(px, py, tr.t.values)
     cands = net.candidates(px, py, k, radius)
     lab, lab_d = label_points(net, px, py, trip["route"]) if with_labels and trip["route"] is not None else (None, None)

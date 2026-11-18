@@ -4,7 +4,6 @@ import sys, time
 import numpy as np
 import pandas as pd
 from .io import load_trip, clean_track
-from .geo import to_xy
 from .candidates import Network
 from .hmm import Router, viterbi
 from .evaluate import top1_predictions, route_continuity, sequence_metrics
@@ -21,7 +20,7 @@ def main(model):
     for tid, g in te.groupby("trip"):
         trip = load_trip(tid, "test")
         net = Network(trip["nodes"], trip["arcs"]); router = Router(net)
-        tr = clean_track(trip["track"], trip["nodes"]); px, py = to_xy(tr.lon.values, tr.lat.values)
+        tr = clean_track(trip["track"], trip["nodes"]); px, py = net.proj(tr.lon.values, tr.lat.values)
         truth = g.groupby("point").true_arc.first()
         clf = top1_predictions(g)
         base = {"trip": tid, "n_points": len(px)}

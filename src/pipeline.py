@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import joblib
 from .io import clean_track
-from .geo import to_xy
 from .candidates import Network, label_points
 from .features import trip_frame, FEATURES
 from .hmm import Router, viterbi
@@ -41,7 +40,7 @@ def predict_trip(trip: dict, model, beta=HMM_CFG["beta"]):
     net = Network(trip["nodes"], trip["arcs"])
     frame, info = trip_frame(trip, with_labels=False, net=net)
     frame["score"] = model.predict_proba(frame[FEATURES])[:, 1]
-    tr = clean_track(trip["track"], trip["nodes"]); px, py = to_xy(tr.lon.values, tr.lat.values)
+    tr = clean_track(trip["track"], trip["nodes"]); px, py = net.proj(tr.lon.values, tr.lat.values)
     clf = frame.loc[frame.groupby("point").score.idxmax(), ["point", "arc"]].rename(columns={"arc": "pred_arc"})
     path, breaks = viterbi(frame, px, py, Router(net), beta=beta)
     return {"net": net, "track": tr, "px": px, "py": py, "classifier": clf.reset_index(drop=True), "hmm": path,

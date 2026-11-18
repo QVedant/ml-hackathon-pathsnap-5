@@ -1,14 +1,15 @@
 """Road network preparation, candidate generation and point->reference-arc labelling. Owner: Venkatesh."""
 import numpy as np
 from scipy.spatial import cKDTree
-from .geo import to_xy, bearing, point_segment
+from .geo import Projector, bearing, point_segment
 
 SAMPLE_STEP = 15.0  # metres between sample points along each arc for the KD-tree
 
 
 class Network:
     def __init__(self, nodes, arcs):
-        self.nx, self.ny = to_xy(nodes.lon.values, nodes.lat.values)
+        self.proj = Projector(nodes.lon.median(), nodes.lat.median())  # per-trip UTM zone
+        self.nx, self.ny = self.proj(nodes.lon.values, nodes.lat.values)
         self.u = arcs.u.values.astype(np.int64)
         self.v = arcs.v.values.astype(np.int64)
         self.ax, self.ay = self.nx[self.u], self.ny[self.u]
