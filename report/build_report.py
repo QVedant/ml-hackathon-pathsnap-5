@@ -147,6 +147,9 @@ bullets([
 ])
 figure(P / "eda_sampling.png", "Sampling interval, points per trip and route length (train and student_test)", 3)
 figure(P / "eda_extent.png", "GPS trajectories and GPS density for trip 00000099 (train)", 3, 14)
+figure(P / "eda_network.png", "Road network around trip 00000099 in UTM metres with GPS and reference route (train)", 3, 15)
+p("The trip network has 72,870 arcs, and 54,546 lie near the trajectory. Dense urban grids sit beside sparse rural roads. "
+  "Near northing 3,861,000 m the GPS stops while the reference route continues. Gaps of this kind create points without a nearby reference arc.")
 figure(P / "folium_eda_trip_00000099.png", "Folium map of trip 00000099 with GPS, reference route and road network (train)", 3, 14.5)
 
 h("Preprocessing", 2)
@@ -272,6 +275,8 @@ figure(P / "cv_macro_f1.png", "CV macro-F1 per model, 5-fold GroupKFold (train)"
 figure(P / "model_comparison.png", "Top-1, macro-F1, log loss and inference time per model (student_test)", 3)
 figure(P / "confusion_matrices.png", "Confusion matrices at threshold 0.5 (student_test)", 3)
 figure(P / "mlp_curve.png", "MLP training loss and validation accuracy per epoch (train)", 3, 11)
+p("MLP is the only model with an epoch history. The scikit-learn MLP records validation accuracy, not validation loss, during early stopping, so the figure plots validation accuracy. "
+  "The other four models have no epoch history, so the report shows no training curve for them.")
 p("LightGBM is the final model. It has the highest Top-1, which is the primary metric. Its log loss of 0.150 is close to the best, so its probabilities suit the HMM. "
   "Its fold scores are stable, with a standard deviation of 0.012. It trains 11 times faster than Random Forest and is far smaller. "
   "All five models lie within 0.7 points of Top-1, so held-out results and deployment cost decide the choice. Training accuracy plays no part.")

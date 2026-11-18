@@ -17,7 +17,7 @@ Pipeline: **candidate arcs per GPS point → LightGBM scores each candidate → 
 | `deployment/` | Deployment | `requirements.txt`, `run_api.sh/.bat`, `run_ui.sh/.bat`, two-laptop guide |
 | `visualisations/` | Visualisations | `viz.py` Folium map generation; `maps/` generated interactive maps |
 | `results/` | Supporting results | CSVs (model comparison, CV folds, Optuna trials, HMM results), logs, `plots/` |
-| `models/` | Model and configuration artifacts | `final_lgbm.joblib`, `final_config.json`, baseline models |
+| `models/` | Model and configuration artifacts | `final_lgbm.joblib` (deployed, tuned), `final_config.json` (best hyperparameters), baseline `LightGBM`, `LogReg`, `MLP` models. `RandomForest` (~195 MB) and `KNN` (~36 MB, stores training rows) exceed repository size limits and are not committed; `model_training/train_models.py` regenerates them. |
 
 ## Setup
 ```bash
@@ -33,6 +33,7 @@ uv run python -m model_training.train_models             # 5 models, GroupKFold 
 uv run python -m hyperparameter_optimisation.tune 40     # Optuna TPE, 40 trials -> models/final_lgbm.joblib, results/optuna_trials.csv
 uv run python -m hmm_viterbi.run_hmm LightGBM_tuned      # classifier-only vs +HMM, Folium maps -> visualisations/maps/
 uv run python -m model_evaluation.plots                  # plots -> results/plots/
+uv run python -m visualisations.plot_network            # road-network plot -> results/plots/eda_network.png
 uv run jupyter lab data_processing/01_eda.ipynb          # EDA
 ```
 
