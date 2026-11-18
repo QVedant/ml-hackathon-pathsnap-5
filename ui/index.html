@@ -40,7 +40,7 @@ let layers = {}, ctl = null;
 
 async function connect(){
   API = $('api').value.trim().replace(/\/+$/,'');
-  if(!/^https?:\/\//i.test(API)) API = 'http://' + API;      // "192.168.1.5:8000" -> "http://192.168.1.5:8000"
+  API = 'http://' + API.replace(/^(https?:?\/*)+/i, '');    // "192.168.1.5:8000", "http:192..." etc. -> "http://192.168.1.5:8000"
   if(!/:\d+$/.test(API)) API += ':8000';                      // default API port
   $('api').value = API; try{localStorage.setItem('pathsnap_api',API)}catch{}
   $('status').textContent = 'connecting…';
