@@ -107,10 +107,10 @@ def screenshot(path, text, level, width=16.5):
 doc.add_heading("PathSnap: GPS Map-Matching with a Candidate Classifier and HMM Viterbi Decoding", 0)
 table([
     ["Name", "SRN", "Section"],
-    ["Venkata Srivaibhav Nukaraju (Vaibhav)", "PES2UG24CS579", "J"],
-    ["Venkatesh", "SRN_VENKATESH", "SECTION"],
-    ["Vedant Sharma", "SRN_VEDANT_SHARMA", "SECTION"],
-    ["Vedant Srivastava", "SRN_VEDANT_SRIVASTAVA", "SECTION"],
+    ["Vedant Sharma", "PES2UG24CS577", "J"],
+    ["Vedant Srivastava", "PES2UG24CS578", "J"],
+    ["Venkata Srivaibhav Nukaraju", "PES2UG24CS579", "J"],
+    ["Venkatesh", "PES2UG24CS580", "J"],
 ])
 p("Team 5. Course: UE24CS352A Machine Learning, PES University, RR Campus. PathSnap Hackathon, 18 November 2026.")
 p("Repository: github.com/QVedant/ml-hackathon-pathsnap-5")
