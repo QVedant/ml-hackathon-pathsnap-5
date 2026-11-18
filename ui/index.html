@@ -39,10 +39,15 @@ L.tileLayer('https://{s}.basemap.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{att
 let layers = {}, ctl = null;
 
 async function connect(){
-  API = $('api').value.replace(/\/$/,''); try{localStorage.setItem('pathsnap_api',API)}catch{}
+  API = $('api').value.trim().replace(/\/+$/,'');
+  if(!/^https?:\/\//i.test(API)) API = 'http://' + API;      // "192.168.1.5:8000" -> "http://192.168.1.5:8000"
+  if(!/:\d+$/.test(API)) API += ':8000';                      // default API port
+  $('api').value = API; try{localStorage.setItem('pathsnap_api',API)}catch{}
   $('status').textContent = 'connecting…';
   try{
-    const h = await (await fetch(API+'/health')).json();
+    const hr = await fetch(API+'/health');
+    if(!(hr.headers.get('content-type')||'').includes('json')) throw new Error(API+' is not the PathSnap API (got a web page). Use http://<laptop1-IP>:8000');
+    const h = await hr.json();
     const t = await (await fetch(API+'/trips')).json();
     $('status').style.color='#a6f4c5'; $('status').textContent = 'connected · model '+h.model;
     $('trips').innerHTML=''; t.trips.forEach(id=>{const b=document.createElement('button');b.textContent='Trip '+id;b.onclick=()=>run(id,b);$('trips').appendChild(b)});
