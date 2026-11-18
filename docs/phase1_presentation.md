@@ -33,7 +33,7 @@ All numbers are from `results/` in this repository. Partitions: 80 train trips (
 | connected to previous nearest arc | cheap sequential context |
 Problem framing: **binary classification per (point, candidate)**, giving P(this arc is correct). That gives us one comparable probability per candidate, which is exactly what the HMM needs as emissions. 17% of candidate rows are positive, so we use class weighting.
 
-## Slide 5 — 5 models and the selection (Vaibhav) · `results/model_comparison.csv`, `results/plots/model_comparison.png`, `cv_macro_f1.png`, `confusion_matrices.png`, `mlp_curve.png`
+## Slide 5 — 5-model comparison (Vaibhav) · `results/model_comparison.csv`, `results/plots/model_comparison.png`, `cv_macro_f1.png`, `confusion_matrices.png`, `mlp_curve.png`
 | Model | Family | CV macro-F1 (±std) | Test macro-F1 | Test log loss | **Test Top-1** | Continuity | Train s | Infer ms/1k |
 |---|---|---|---|---|---|---|---|---|
 | Logistic Regression | linear | 0.901 ± 0.009 | 0.893 | 0.195 | 0.867 | 0.933 | 2.2 | 0.14 |
@@ -43,23 +43,24 @@ Problem framing: **binary classification per (point, candidate)**, giving P(this
 | MLP (64-32) | neural net | 0.925 ± 0.009 | 0.920 | **0.125** | 0.871 | 0.932 | 25.9 | 0.56 |
 
 - **Primary metric: student-test observation-level Top-1.** The route depends on picking the right candidate *per point*. Macro-F1 at a 0.5 threshold does not measure that.
-- **Final pick: LightGBM.** It has the best Top-1. Its log loss of 0.152 is good enough for HMM emissions, it trains 10× faster than RF, and CV std is low, so it is stable across trips. It is also the best fit for Bayesian tuning in Phase 2.
-- MLP is a close second: best log loss and F1, but 0.4 pt lower Top-1. KNN has good F1 but poorly calibrated probabilities (log loss 0.32) and is about 60× slower at inference than LightGBM, so it is a poor fit for the decoder.
+- **Final pick: LightGBM.** It has the best Top-1. Its log loss of 0.152 means its probabilities are reliable, it trains 10× faster than RF, and CV std is low, so it is stable across trips. It is also the best fit for Bayesian tuning in Phase 2.
+- MLP is a close second: best log loss and F1, but 0.4 pt lower Top-1. KNN has good F1 but poorly calibrated probabilities (log loss 0.32) and is about 60× slower at inference than LightGBM.
 - Overfitting check: CV and test F1 are within about 0.01 for every model, so there is no overfitting. Trips never cross folds (GroupKFold).
 - Training data: KNN was trained on a 150k-row subsample and MLP on 400k (cost). The other models used all about 1 M rows.
 
-## Slide 6 — HMM and Viterbi (Venkatesh, Vedant Srivastava) · `results/hmm_summary_LightGBM.csv`, `plots/hmm_vs_classifier.png`, `maps/hmm_*.html` vs `maps/clf_*.html`
-- Hidden states: the candidate arcs of each GPS point. Emission: log P from LightGBM.
-- Transition: `−|d_network − d_gps| / β`, where d_network is the Dijkstra shortest path along directed arcs (cutoff 1.5 km). An unreachable arc gets −∞, so impossible jumps are forbidden. For gaps, β is multiplied by dt.
-- Recurrence: δ_t(j) = max_i [δ_{t−1}(i) + log A_ij] + log B_t(j), then backtrack. If every transition is −∞, the chain breaks and restarts (0.6 breaks per trip on average).
+## Slide 6 — Per-model deep dive (each person presents their model(s))
+Model split: **Vedant Sharma → KNN** · **Vedant Srivastava → Logistic Regression + MLP** · **Venkatesh → Random Forest** · **Vaibhav → LightGBM + final comparison/selection**.
+For each model, answer the report's questions: why it suits this problem, strengths and limits, key hyperparameters, loss function, student-test results, over- or underfitting evidence.
 
-| Student-test (mean over 10 trips) | Top-1 | Continuity | Route F1 |
-|---|---|---|---|
-| LightGBM only | 0.889 | 0.931 | 0.870 |
-| + HMM β=10 | 0.896 | 0.973 | 0.902 |
-| + HMM β=50 | **0.902** | 0.966 | 0.900 |
-- The HMM mostly fixes continuity: invalid jumps drop from 6.9% to 2.7%. Pointwise gains are smaller because the classifier is already strong. β trades accuracy against smoothness. It runs in about 0.5 s per trip.
-- Where it does not help: points without a correct candidate (miss rate), and labels near junctions, where the reference itself is ambiguous.
+| Model (presenter) | Why it's here | Config / loss | Result | Over/underfit? |
+|---|---|---|---|---|
+| **Logistic Regression** (Vedant Srivastava) | linear baseline, outputs probabilities | C=1, L2, class_weight balanced, scaled; log loss | Top-1 0.867, F1 0.893, log loss 0.195 | slight underfit: lowest CV F1 (0.901), because it can't model interactions like "close but wrong heading" |
+| **KNN** (Vedant Sharma) | instance-based: similar geometry should give the same label | k=25, distance-weighted, scaled; no loss (lazy), 150k-row subsample | F1 0.916 but log loss 0.320, Top-1 0.864 | no overfit (CV 0.924 vs test 0.916); probabilities are coarse; 345 ms per 1k rows is far too slow |
+| **Random Forest** (Venkatesh) | bagged nonlinear trees, robust | 200 trees, depth 16, leaf 5, balanced; Gini impurity | Top-1 0.870, log loss 0.147 | depth limit keeps CV vs test within 0.007; 77 s to train, 195 MB model |
+| **LightGBM** (Vaibhav) | gradient boosting, strong on tabular data, fast | 400 trees, lr 0.05, 63 leaves, subsample 0.8; binary log loss | **Top-1 0.875 (best)**, log loss 0.152, 7 s to train | CV 0.917 vs test 0.910, so no overfit |
+| **MLP** (Vedant Srivastava) | neural net, nonlinear; has a training curve | 64-32 ReLU, adam, early stopping, 400k rows; log loss | best log loss 0.125 and F1 0.920, Top-1 0.871 | early stopping on validation; see `plots/mlp_curve.png` |
+
+**Selection (Vaibhav):** LightGBM, on the primary metric (student-test Top-1). Tie-breakers: good probability quality, speed, stable CV. MLP is the runner-up.
 
 ---
 ## Likely viva questions
@@ -68,5 +69,5 @@ Problem framing: **binary classification per (point, candidate)**, giving P(this
 - *Why GroupKFold?* Consecutive points are highly correlated. Mixing points from one trip across folds leaks information.
 - *How were labels made?* By DP alignment to the ordered route. The labels are approximate, as the reference route is not verified ground truth.
 - *Why not pick by training accuracy?* All models are within about 1% of each other. We pick on held-out trips and on the metric that matters for routing (Top-1), plus probability quality for the HMM.
-- *How are gaps handled?* dt is a feature, β scales with dt, and the chain breaks and restarts when nothing is reachable.
-- *Phase 2:* Bayesian tuning with Optuna TPE (not grid/random) for LightGBM, with GroupKFold Top-1 as the objective.
+- *How are gaps handled?* dt is a feature that tells the model a point is less reliable after a gap. (HMM handling of gaps comes in Phase 2.)
+- *Phase 2:* HMM/Viterbi decoding (already prototyped), plus Bayesian tuning with Optuna TPE (not grid/random) for LightGBM, with GroupKFold Top-1 as the objective.
