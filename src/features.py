@@ -30,7 +30,7 @@ def trip_frame(trip, k=K, radius=RADIUS, with_labels=True, net=None):
     px, py = to_xy(tr.lon.values, tr.lat.values)
     hd, speed, dt = track_kinematics(px, py, tr.t.values)
     cands = net.candidates(px, py, k, radius)
-    lab = label_points(net, px, py, trip["route"]) if with_labels and trip["route"] is not None else None
+    lab, lab_d = label_points(net, px, py, trip["route"]) if with_labels and trip["route"] is not None else (None, None)
     rows = []
     prev_nearest = -1
     for i, (a, d, f) in enumerate(cands):
@@ -56,6 +56,7 @@ def trip_frame(trip, k=K, radius=RADIUS, with_labels=True, net=None):
     if lab is not None:
         hit = out.groupby("point").label.max()
         info["cand_miss_rate"] = 1 - hit.sum() / len(px)
+        info["median_gps_to_route_m"] = float(np.median(lab_d))
     return out, info
 
 

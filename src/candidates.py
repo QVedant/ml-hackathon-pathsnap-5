@@ -44,19 +44,32 @@ class Network:
         return out
 
 
-def label_points(net: Network, px, py, route, window=30):
-    """Assign each GPS point a reference arc from the ordered route.
-    Monotonic pointer: the matched route index never goes backwards, searched in a forward window,
-    so loops / out-and-back trips are labelled in the right order."""
-    route = np.asarray(route)
-    ra = route
-    ptr = 0
-    lab = np.empty(len(px), np.int64)
+def label_points(net: Network, px, py, route, max_step=20):
+    """Assign each GPS point a reference arc from the ordered route by DP alignment.
+    State = index j in the route. Cost = point-to-arc distance. Between consecutive GPS points the
+    route index may stay or move forward by up to max_step arcs (never backwards), so the labelling
+    follows route order (handles loops / revisits) and is globally optimal, unlike a greedy pointer.
+    Returns (labels, dist_to_label)."""
+    ra = np.asarray(route)
+    M = len(ra)
+    D = np.empty((len(px), M))
     for i in range(len(px)):
-        j = np.arange(ptr, min(ptr + window, len(ra)))
-        a = ra[j]
-        d, _ = point_segment(px[i], py[i], net.ax[a], net.ay[a], net.bx[a], net.by[a])
-        b = int(np.argmin(d))
-        ptr = j[b]
-        lab[i] = ra[ptr]
-    return lab
+        D[i], _ = point_segment(px[i], py[i], net.ax[ra], net.ay[ra], net.bx[ra], net.by[ra])
+    cost = D[0].copy()
+    back = np.empty((len(px), M), np.int32)
+    back[0] = np.arange(M)
+    idx = np.arange(M)
+    for i in range(1, len(px)):
+        best = cost.copy(); arg = idx.copy()
+        for s in range(1, max_step + 1):  # come from j-s
+            c = np.full(M, np.inf); c[s:] = cost[:-s]
+            better = c < best
+            best[better] = c[better]; arg[better] = idx[better] - s
+        cost = best + D[i]
+        back[i] = arg
+    j = int(np.argmin(cost))
+    path = np.empty(len(px), np.int64)
+    for i in range(len(px) - 1, -1, -1):
+        path[i] = j
+        j = back[i, j]
+    return ra[path], D[np.arange(len(px)), path]
