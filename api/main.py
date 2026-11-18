@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from src.pipeline import ROOT, load_model, load_trip_dir, load_reference, predict_trip, score_trip, arcs_to_lines, HMM_CFG
+from api.pipeline import ROOT, load_model, load_trip_dir, load_reference, predict_trip, score_trip, arcs_to_lines, HMM_CFG
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [PathSnap] %(message)s")
 log = logging.getLogger("pathsnap")

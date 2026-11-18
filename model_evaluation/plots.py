@@ -1,4 +1,4 @@
-"""Comparison plots from real experiment csvs. Owner: Ved. Run: uv run python -m src.plots"""
+"""Comparison plots from real experiment csvs. Owner: Ved. Run: uv run python -m model_evaluation.plots"""
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")

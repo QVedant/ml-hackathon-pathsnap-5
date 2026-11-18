@@ -1,6 +1,6 @@
 """Train + compare 5 candidate classifiers. Owner: Vaibhav.
 Task: binary - is this candidate arc the true arc for this GPS point? Probabilities feed the HMM.
-Run: uv run python -m src.train_models"""
+Run: uv run python -m model_training.train_models"""
 import json, time
 import numpy as np
 import pandas as pd
@@ -15,10 +15,10 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score,
                              log_loss, confusion_matrix)
 from lightgbm import LGBMClassifier
-from .features import FEATURES
-from .evaluate import top1_predictions, top1_accuracy, candidate_miss_rate, route_continuity
-from .io import load_trip
-from .candidates import Network
+from feature_engineering.features import FEATURES
+from model_evaluation.evaluate import top1_predictions, top1_accuracy, candidate_miss_rate, route_continuity
+from data_processing.io import load_trip
+from data_processing.candidates import Network
 
 SEED = 42
 MAX_ROUTE_OFFSET_M = 50.0

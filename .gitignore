@@ -6,3 +6,6 @@ data
 models/RandomForest.joblib
 models/KNN.joblib
 EXPORT.txt
+docs/
+results/api_test.log
+.playwright-mcp/

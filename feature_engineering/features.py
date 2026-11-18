@@ -1,11 +1,11 @@
 """Feature engineering: one row per (GPS point, candidate arc). Owner: Venkatesh.
-Run: uv run python -m src.features"""
+Run: uv run python -m feature_engineering.features"""
 import sys, time
 import numpy as np
 import pandas as pd
-from .io import load_trip, clean_track, trip_ids
-from .geo import bearing, angle_diff
-from .candidates import Network, label_points
+from data_processing.io import load_trip, clean_track, trip_ids
+from data_processing.geo import bearing, angle_diff
+from data_processing.candidates import Network, label_points
 
 K, RADIUS = 8, 50.0
 

@@ -1,6 +1,6 @@
 """Bayesian hyperparameter optimisation of LightGBM with Optuna TPE (not grid / random). Owner: Vaibhav.
 Objective: mean observation-level Top-1 accuracy over 3-fold GroupKFold on train trips (trips never split).
-Run: uv run python -m src.tune [n_trials]"""
+Run: uv run python -m hyperparameter_optimisation.tune [n_trials]"""
 import sys, time, json
 import numpy as np
 import pandas as pd
@@ -8,9 +8,9 @@ import optuna, joblib
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import f1_score, log_loss
 from lightgbm import LGBMClassifier
-from .features import FEATURES
-from .evaluate import top1_predictions, top1_accuracy
-from .train_models import MAX_ROUTE_OFFSET_M, SEED
+from feature_engineering.features import FEATURES
+from model_evaluation.evaluate import top1_predictions, top1_accuracy
+from model_training.train_models import MAX_ROUTE_OFFSET_M, SEED
 
 tr = pd.read_parquet("results/features_train.parquet")
 q = pd.read_csv("results/candidates_train.csv", dtype={"trip": str})

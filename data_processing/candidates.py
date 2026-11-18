@@ -1,7 +1,7 @@
 """Road network preparation, candidate generation and point->reference-arc labelling. Owner: Venkatesh."""
 import numpy as np
 from scipy.spatial import cKDTree
-from .geo import Projector, bearing, point_segment
+from data_processing.geo import Projector, bearing, point_segment
 
 SAMPLE_STEP = 15.0  # metres between sample points along each arc for the KD-tree
 

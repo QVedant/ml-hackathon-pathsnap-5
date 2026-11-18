@@ -1,13 +1,13 @@
 """Classifier-only vs classifier+HMM on student_test, and beta tuning (train/student-test only).
-Owner: Venkatesh. Run: uv run python -m src.run_hmm LightGBM"""
+Owner: Venkatesh. Run: uv run python -m hmm_viterbi.run_hmm LightGBM"""
 import sys, time
 import numpy as np
 import pandas as pd
-from .io import load_trip, clean_track
-from .candidates import Network
-from .hmm import Router, viterbi
-from .evaluate import top1_predictions, route_continuity, sequence_metrics
-from .viz import trip_map
+from data_processing.io import load_trip, clean_track
+from data_processing.candidates import Network
+from hmm_viterbi.hmm import Router, viterbi
+from model_evaluation.evaluate import top1_predictions, route_continuity, sequence_metrics
+from visualisations.viz import trip_map
 
 BETAS = [2.0, 5.0, 10.0, 20.0, 50.0]
 
@@ -36,8 +36,8 @@ def main(model):
                          "continuity": route_continuity(path.pred_arc.values, net), "breaks": breaks,
                          **sequence_metrics(path.pred_arc.values, trip["route"]), "secs": time.time() - t0})
             if beta == 10.0:
-                trip_map(trip, path.pred_arc.values, title=f"Trip {tid} — {model}+HMM").save(f"maps/hmm_{tid}.html")
-                trip_map(trip, clf.pred_arc.values, title=f"Trip {tid} — {model} only").save(f"maps/clf_{tid}.html")
+                trip_map(trip, path.pred_arc.values, title=f"Trip {tid} — {model}+HMM").save(f"visualisations/maps/hmm_{tid}.html")
+                trip_map(trip, clf.pred_arc.values, title=f"Trip {tid} — {model} only").save(f"visualisations/maps/clf_{tid}.html")
         print(tid, "done", flush=True)
     r = pd.DataFrame(rows)
     r.to_csv(f"results/hmm_per_trip_{model}.csv", index=False)
