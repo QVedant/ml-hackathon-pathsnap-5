@@ -3,3 +3,5 @@ __pycache__/
 data
 *.parquet
 .ipynb_checkpoints/
+models/RandomForest.joblib
+models/KNN.joblib
