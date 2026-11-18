@@ -1,4 +1,4 @@
-<title>PathSnap Viva Guide</title>
+<title>PathSnap Phase 2 Viva</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
@@ -48,16 +48,15 @@ td.n{text-align:right;font-family:var(--mono)}
 <div class="wrap">
 <header>
   <div class="owner">Team 5 · UE24CS352A Machine Learning</div>
-  <h1>PathSnap viva guide</h1>
+  <h1>PathSnap Phase 2 viva</h1>
   <p class="mute">Everything any of us can be asked, with our real numbers. Read all of it, not only your part. Numbers come from <code>results/</code> in the repo.</p>
 </header>
 <nav>
-  <a href="#team">Who did what</a><a href="#data">Data files</a><a href="#prep">Preprocessing</a><a href="#feat">Features</a>
-  <a href="#models">5 models</a><a href="#overfit">Overfitting</a><a href="#pick">Final pick</a><a href="#tune">Bayesian tuning</a>
-  <a href="#hmm">HMM / Viterbi</a><a href="#deploy">API + UI</a><a href="#qa">Rapid-fire Q&amp;A</a>
+  <a href="#team">Split</a><a href="#tune">Bayesian tuning</a><a href="#hmm">HMM / Viterbi</a><a href="#deploy">API + UI</a><a href="#demo">Demo run-sheet</a><a href="#qa2">Phase 2 Q&amp;A</a>
+  <a href="#data">Data files</a><a href="#prep">Preprocessing</a><a href="#feat">Features</a><a href="#models">5 models</a><a href="#overfit">Overfitting</a><a href="#pick">Final pick</a><a href="#qa">Phase 1 Q&amp;A</a>
 </nav>
 
-<h2 id="team">Who did what</h2>
+<h2 id="team">Phase 2 split</h2>
 <div class="split">
   <div><b>Venkatesh</b><ul><li>P1: preprocessing, EDA</li><li>P2: HMM/Viterbi, inference pipeline (<code>src/pipeline.py</code>)</li><li>Report §2.2, §5</li></ul></div>
   <div><b>Vedant Sharma</b><ul><li>P1: feature engineering</li><li>P2: FastAPI backend (laptop 1)</li><li>Report §7 API</li></ul></div>
@@ -66,6 +65,117 @@ td.n{text-align:right;font-family:var(--mono)}
 </div>
 <p class="mute">The examiner asks anyone anything. Everyone should be able to explain every section below in two sentences.</p>
 
+<h2 id="tune">Bayesian hyperparameter tuning <span class="owner">Vaibhav</span></h2>
+<ul>
+<li><b>Method:</b> Optuna with the <b>TPE sampler</b> (Tree-structured Parzen Estimator). TPE models which parameter values gave good scores and which gave bad ones, and samples where the ratio good/bad is highest. Each trial learns from earlier ones. Grid and random search do not.</li>
+<li>First 10 trials are random exploration (TPE's startup), the rest are guided. Seed 42. Trial 0 is the untuned configuration, for a fair comparison.</li>
+<li><b>Objective:</b> maximise mean observation-level Top-1 over 3-fold GroupKFold on the 78 clean train trips. Student-test is used only to compare tuned vs untuned afterwards.</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>Hyperparameter</th><th>Range</th><th>Why</th></tr>
+<tr><td>n_estimators</td><td>100–1000, step 50</td><td>number of boosting rounds</td></tr>
+<tr><td>learning_rate</td><td>0.01–0.2, log</td><td>step size; trades off with n_estimators</td></tr>
+<tr><td>num_leaves</td><td>15–255, log</td><td>tree complexity; main overfitting control</td></tr>
+<tr><td>min_child_samples</td><td>10–300, log</td><td>minimum rows per leaf; regularisation</td></tr>
+<tr><td>subsample</td><td>0.5–1.0</td><td>row sampling per tree</td></tr>
+<tr><td>colsample_bytree</td><td>0.4–1.0</td><td>feature sampling per tree</td></tr>
+<tr><td>reg_lambda</td><td>0.001–10, log</td><td>L2 penalty on leaf weights</td></tr>
+</table></div>
+<div id="tune-results">
+<h3>Results: 40 trials, 1,012 s (≈17 min), best = trial 25</h3>
+<div class="tbl"><table>
+<tr><th>Parameter</th><th>Untuned</th><th>Tuned (best)</th></tr>
+<tr><td>n_estimators</td><td class="n">400</td><td class="n">550</td></tr>
+<tr><td>learning_rate</td><td class="n">0.05</td><td class="n">0.0317</td></tr>
+<tr><td>num_leaves</td><td class="n">63</td><td class="n">229</td></tr>
+<tr><td>min_child_samples</td><td class="n">20</td><td class="n">59</td></tr>
+<tr><td>subsample</td><td class="n">0.8</td><td class="n">0.597</td></tr>
+<tr><td>colsample_bytree</td><td class="n">0.8</td><td class="n">0.524</td></tr>
+<tr><td>reg_lambda</td><td class="n">≈0</td><td class="n">0.683</td></tr>
+</table></div>
+<div class="tbl"><table>
+<tr><th>Metric</th><th>Untuned</th><th>Tuned</th></tr>
+<tr><td>CV Top-1 (objective)</td><td class="n">0.8836</td><td class="n best">0.8844</td></tr>
+<tr><td>CV macro-F1</td><td class="n">0.9182</td><td class="n best">0.9218</td></tr>
+<tr><td>CV log loss</td><td class="n">0.1436</td><td class="n best">0.1379</td></tr>
+<tr><td>Student-test Top-1</td><td class="n best">0.8745</td><td class="n">0.8732</td></tr>
+<tr><td>Student-test macro-F1</td><td class="n">0.9107</td><td class="n best">0.9109</td></tr>
+<tr><td>Student-test log loss</td><td class="n">0.1517</td><td class="n best">0.1471</td></tr>
+<tr><td>Student-test Top-1 after HMM (β=50)</td><td class="n">0.9019</td><td class="n">0.9016</td></tr>
+<tr><td>Train time / inference</td><td class="n best">6.9 s / 3.6 ms per 1k</td><td class="n">13.9 s / 8.0 ms per 1k</td></tr>
+</table></div>
+<ul>
+<li><b>Did tuning help?</b> Only slightly. CV Top-1 +0.08 points, CV F1 +0.4 points, log loss 4% lower on both CV and test. Student-test Top-1 is 0.13 points lower and equal after the HMM. The defaults were already near-optimal; the gain is mostly better-calibrated probabilities.</li>
+<li><b>Final model = tuned</b>, chosen on the objective we optimised (CV on train) and on log loss, not on the student-test number. The test differences are within noise (10 trips).</li>
+<li><b>Most important hyperparameters</b> (Optuna fANOVA): n_estimators 35%, num_leaves 34%, learning_rate 17%; the others under 6% each.</li>
+<li>Tuned trees are bigger (229 leaves) but more regularised (fewer rows/columns per tree, larger leaves, L2 0.68), so no overfitting: CV and test log loss both improved.</li>
+<li>Cost: 40 trials × 3 folds = 120 fits ≈ 17 min on 12 cores. Files: <code>results/optuna_trials.csv</code>, <code>results/tuning_comparison.csv</code>, <code>results/plots/optuna_history.png</code>, <code>models/final_config.json</code>.</li>
+</ul>
+</div>
+
+<h2 id="hmm">HMM and Viterbi <span class="owner">Venkatesh</span></h2>
+<p>The classifier scores each point independently, so consecutive predictions can jump between unconnected roads. The HMM chooses the most likely <i>connected</i> sequence.</p>
+<ul>
+<li><b>Hidden states:</b> the candidate arcs of each GPS point (up to 8 per point).</li>
+<li><b>Observations:</b> the GPS points.</li>
+<li><b>Emission:</b> log P(arc is correct) from LightGBM.</li>
+<li><b>Transition:</b> compares the driving distance between the two candidates (Dijkstra shortest path on the directed network, up to 1.5 km) with the straight-line GPS distance. If the vehicle really drove that arc pair, the two distances are similar. Unreachable pairs get probability 0.</li>
+</ul>
+<div class="formula">log A(i→j) = −| d_network(i, j) − d_gps(t−1, t) | / β      (β multiplied by the time gap dt)
+δ_t(j)     = max_i [ δ_{t−1}(i) + log A(i→j) ] + log B_t(j)
+then backtrack the stored argmax pointers from the best final state</div>
+<ul>
+<li><b>Gaps:</b> β grows with dt, so after a long gap larger detours are allowed.</li>
+<li><b>Disconnected roads / no valid transition:</b> the chain breaks and Viterbi restarts from that point (0.6 breaks per trip on average).</li>
+<li><b>Points without candidates</b> are skipped.</li>
+<li><b>β chosen on student-test</b> (swept 2, 5, 10, 20, 50); β = 50 gave the best Top-1.</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>Student-test (mean of 10 trips)</th><th>Top-1</th><th>Continuity</th><th>Route F1</th></tr>
+<tr><td>LightGBM only</td><td class="n">0.889</td><td class="n">0.931</td><td class="n">0.870</td></tr>
+<tr><td>+ HMM β = 10</td><td class="n">0.896</td><td class="n best">0.973</td><td class="n best">0.902</td></tr>
+<tr><td>+ HMM β = 50</td><td class="n best">0.902</td><td class="n">0.966</td><td class="n">0.900</td></tr>
+</table></div>
+<p class="mute">Main effect is continuity: invalid jumps drop from 6.9% to about 3%. It cannot fix points whose true arc is not among the candidates. About 0.5 s per trip.</p>
+
+<h2 id="deploy">API and UI <span class="owner">Vedant Sharma (API) · Vedant Srivastava (UI)</span></h2>
+<ul>
+<li><b>Laptop 1:</b> <code>uv run uvicorn api.main:app --host 0.0.0.0 --port 8000</code>. <code>--host 0.0.0.0</code> makes it reachable from the other laptop. The evaluator trips folder is set with <code>PATHSNAP_EVAL_DIR</code>.</li>
+<li><b>Endpoints:</b> <code>GET /health</code>, <code>GET /trips</code> (lists trip ids), <code>POST /predict {"trip_id": "..."}</code>.</li>
+<li><b>/predict pipeline:</b> load track, nodes, arcs (not the route) → clean → candidates → 13 features → LightGBM probabilities → Viterbi → predicted arcs. Then the server reads the reference route and computes accuracy. It returns GPS points, the predicted route geometry and the metrics. The reference route never leaves the server.</li>
+<li><b>Logs:</b> every request prints the trip id, classifier and HMM Top-1, continuity, route F1 and time. Keep this terminal visible for the examiner.</li>
+<li><b>Laptop 2:</b> <code>cd ui &amp;&amp; python3 -m http.server 5500</code>, open <code>http://localhost:5500/?api=http://&lt;laptop1-ip&gt;:8000</code>. The UI lists the trips, sends the chosen id, draws GPS (blue), classifier-only (orange) and HMM route (red) on a Leaflet map with a metrics table.</li>
+<li>CORS is enabled so the browser on laptop 2 may call laptop 1. Leaflet is bundled locally, so the UI works without internet (map tiles need internet; the route still draws without them).</li>
+<li>Typical time per trip: 1–5 s.</li>
+</ul>
+
+<h2 id="demo">Demo run-sheet</h2>
+<ol>
+<li>Both laptops on the same hotspot. Laptop 1: <code>ip -4 addr</code> (Linux) or <code>ipconfig</code> (Windows) and note the IP.</li>
+<li>Laptop 1: <code>export PATHSNAP_EVAL_DIR=/path/to/evaluator_trips</code> then <code>uv run uvicorn api.main:app --host 0.0.0.0 --port 8000</code>. First log line confirms <code>final_lgbm.joblib</code> and the trips folder.</li>
+<li>Laptop 2: <code>cd ui &amp;&amp; python3 -m http.server 5500</code>, open <code>http://localhost:5500/?api=http://&lt;ip&gt;:8000</code>, it should say “connected” and list 10 trips.</li>
+<li>Examiner clicks a trip. Point at the laptop 1 terminal: the log line with the trip id, Top-1, continuity and time is the proof the request went through the API.</li>
+<li>Toggle “Classifier only” on the map to show what the HMM fixed.</li>
+<li>If it fails: check the firewall for port 8000 (<code>sudo ufw allow 8000</code>, or allow Python on Windows). Backup: open <code>http://&lt;ip&gt;:8000/ui/</code> on laptop 2, served by the API itself.</li>
+</ol>
+<h2 id="qa2">Phase 2 rapid-fire</h2>
+<div class="qa">
+<details><summary>What is Bayesian optimisation? How is it different from grid/random?</summary><p>It builds a model of “parameters → score” from finished trials and picks the next trial where improvement is most likely. Grid tries every combination; random ignores earlier results. TPE (Optuna's default) models the density of good and bad trials separately and samples where good/bad is highest.</p></details>
+<details><summary>What was the objective? Why that?</summary><p>Mean observation-level Top-1 over 3-fold GroupKFold on the train trips. Top-1 is the selection metric from Phase 1; group folds keep trips separate so the score is honest.</p></details>
+<details><summary>Why not tune on student-test?</summary><p>Then the student-test score would be optimistic. Student-test was only used afterwards to compare tuned vs untuned.</p></details>
+<details><summary>How many trials, how long, best trial?</summary><p>40 trials (10 random startup + 30 guided), 1,012 s ≈ 17 min, best = trial 25 with CV Top-1 0.8844.</p></details>
+<details><summary>Which hyperparameter mattered most?</summary><p>n_estimators (35%) and num_leaves (34%), then learning_rate (17%), from Optuna's importance analysis.</p></details>
+<details><summary>Tuned is worse on student-test Top-1. Why keep it?</summary><p>The drop is 0.13 points on only 10 trips (noise); after the HMM both are 0.902. Tuned is better on the CV objective and has 4% lower log loss, which matters for the HMM emissions. Choosing on student-test would be selecting on test data.</p></details>
+<details><summary>Why FastAPI?</summary><p>Required by the task; also automatic request validation with pydantic, interactive docs at <code>/docs</code>, and uvicorn logs every request.</p></details>
+<details><summary>What does --host 0.0.0.0 do?</summary><p>Listen on all network interfaces. The default 127.0.0.1 only accepts requests from the same laptop.</p></details>
+<details><summary>Why CORS?</summary><p>The UI page comes from laptop 2 (port 5500) and calls laptop 1 (port 8000), a different origin. The browser blocks that unless the API sends CORS headers.</p></details>
+<details><summary>How do you guarantee ground truth isn't used?</summary><p><code>load_trip_dir</code> never reads <code>.route</code>; <code>predict_trip</code> asserts route is None. Only after prediction does the server read the route to compute accuracy. The UI receives metrics, never the reference route geometry.</p></details>
+<details><summary>When is the model loaded?</summary><p>Once at API startup (<code>load_model()</code>), not per request, so each request only runs the pipeline. 1–5 s per trip depending on network size.</p></details>
+<details><summary>What does /predict return?</summary><p>trip_id, number of GPS points, points without candidates, HMM chain breaks, processing time, model name, GPS points, predicted route segments (HMM), classifier-only segments, predicted arc ids, and metrics (Top-1, continuity, route precision/recall/F1 for classifier and HMM).</p></details>
+<details><summary>What if the trip id is wrong?</summary><p>HTTP 404 “unknown trip”. Ids containing “/” or “..” are rejected so nobody can read other folders.</p></details>
+<details><summary>Is anything hardcoded for the evaluator trips?</summary><p>No. The API lists whatever folders are in <code>PATHSNAP_EVAL_DIR</code> and runs the same pipeline on each.</p></details>
+</div>
+<h2 id="p1">Phase 1 background (they still ask)</h2>
 <h2 id="data">The data files</h2>
 <p>Each trip is a folder <code>&lt;id&gt;/</code> with four whitespace-separated files without headers. Each trip comes with <b>its own road network</b>.</p>
 <div class="tbl"><table>
@@ -160,91 +270,7 @@ td.n{text-align:right;font-family:var(--mono)}
 <li>Training accuracy was not used to choose: all models are within ~1% of each other, so we used held-out trips.</li>
 </ul>
 
-<h2 id="tune">Bayesian hyperparameter tuning <span class="owner">Vaibhav</span></h2>
-<ul>
-<li><b>Method:</b> Optuna with the <b>TPE sampler</b> (Tree-structured Parzen Estimator). TPE models which parameter values gave good scores and which gave bad ones, and samples where the ratio good/bad is highest. Each trial learns from earlier ones. Grid and random search do not.</li>
-<li>First 10 trials are random exploration (TPE's startup), the rest are guided. Seed 42. Trial 0 is the untuned configuration, for a fair comparison.</li>
-<li><b>Objective:</b> maximise mean observation-level Top-1 over 3-fold GroupKFold on the 78 clean train trips. Student-test is used only to compare tuned vs untuned afterwards.</li>
-</ul>
-<div class="tbl"><table>
-<tr><th>Hyperparameter</th><th>Range</th><th>Why</th></tr>
-<tr><td>n_estimators</td><td>100–1000, step 50</td><td>number of boosting rounds</td></tr>
-<tr><td>learning_rate</td><td>0.01–0.2, log</td><td>step size; trades off with n_estimators</td></tr>
-<tr><td>num_leaves</td><td>15–255, log</td><td>tree complexity; main overfitting control</td></tr>
-<tr><td>min_child_samples</td><td>10–300, log</td><td>minimum rows per leaf; regularisation</td></tr>
-<tr><td>subsample</td><td>0.5–1.0</td><td>row sampling per tree</td></tr>
-<tr><td>colsample_bytree</td><td>0.4–1.0</td><td>feature sampling per tree</td></tr>
-<tr><td>reg_lambda</td><td>0.001–10, log</td><td>L2 penalty on leaf weights</td></tr>
-</table></div>
-<div id="tune-results">
-<h3>Results: 40 trials, 1,012 s (≈17 min), best = trial 25</h3>
-<div class="tbl"><table>
-<tr><th>Parameter</th><th>Untuned</th><th>Tuned (best)</th></tr>
-<tr><td>n_estimators</td><td class="n">400</td><td class="n">550</td></tr>
-<tr><td>learning_rate</td><td class="n">0.05</td><td class="n">0.0317</td></tr>
-<tr><td>num_leaves</td><td class="n">63</td><td class="n">229</td></tr>
-<tr><td>min_child_samples</td><td class="n">20</td><td class="n">59</td></tr>
-<tr><td>subsample</td><td class="n">0.8</td><td class="n">0.597</td></tr>
-<tr><td>colsample_bytree</td><td class="n">0.8</td><td class="n">0.524</td></tr>
-<tr><td>reg_lambda</td><td class="n">≈0</td><td class="n">0.683</td></tr>
-</table></div>
-<div class="tbl"><table>
-<tr><th>Metric</th><th>Untuned</th><th>Tuned</th></tr>
-<tr><td>CV Top-1 (objective)</td><td class="n">0.8836</td><td class="n best">0.8844</td></tr>
-<tr><td>CV macro-F1</td><td class="n">0.9182</td><td class="n best">0.9218</td></tr>
-<tr><td>CV log loss</td><td class="n">0.1436</td><td class="n best">0.1379</td></tr>
-<tr><td>Student-test Top-1</td><td class="n best">0.8745</td><td class="n">0.8732</td></tr>
-<tr><td>Student-test macro-F1</td><td class="n">0.9107</td><td class="n best">0.9109</td></tr>
-<tr><td>Student-test log loss</td><td class="n">0.1517</td><td class="n best">0.1471</td></tr>
-<tr><td>Student-test Top-1 after HMM (β=50)</td><td class="n">0.9019</td><td class="n">0.9016</td></tr>
-<tr><td>Train time / inference</td><td class="n best">6.9 s / 3.6 ms per 1k</td><td class="n">13.9 s / 8.0 ms per 1k</td></tr>
-</table></div>
-<ul>
-<li><b>Did tuning help?</b> Only slightly. CV Top-1 +0.08 points, CV F1 +0.4 points, log loss 4% lower on both CV and test. Student-test Top-1 is 0.13 points lower and equal after the HMM. The defaults were already near-optimal; the gain is mostly better-calibrated probabilities.</li>
-<li><b>Final model = tuned</b>, chosen on the objective we optimised (CV on train) and on log loss, not on the student-test number. The test differences are within noise (10 trips).</li>
-<li><b>Most important hyperparameters</b> (Optuna fANOVA): n_estimators 35%, num_leaves 34%, learning_rate 17%; the others under 6% each.</li>
-<li>Tuned trees are bigger (229 leaves) but more regularised (fewer rows/columns per tree, larger leaves, L2 0.68), so no overfitting: CV and test log loss both improved.</li>
-<li>Cost: 40 trials × 3 folds = 120 fits ≈ 17 min on 12 cores. Files: <code>results/optuna_trials.csv</code>, <code>results/tuning_comparison.csv</code>, <code>results/plots/optuna_history.png</code>, <code>models/final_config.json</code>.</li>
-</ul>
-</div>
-
-<h2 id="hmm">HMM and Viterbi <span class="owner">Venkatesh</span></h2>
-<p>The classifier scores each point independently, so consecutive predictions can jump between unconnected roads. The HMM chooses the most likely <i>connected</i> sequence.</p>
-<ul>
-<li><b>Hidden states:</b> the candidate arcs of each GPS point (up to 8 per point).</li>
-<li><b>Observations:</b> the GPS points.</li>
-<li><b>Emission:</b> log P(arc is correct) from LightGBM.</li>
-<li><b>Transition:</b> compares the driving distance between the two candidates (Dijkstra shortest path on the directed network, up to 1.5 km) with the straight-line GPS distance. If the vehicle really drove that arc pair, the two distances are similar. Unreachable pairs get probability 0.</li>
-</ul>
-<div class="formula">log A(i→j) = −| d_network(i, j) − d_gps(t−1, t) | / β      (β multiplied by the time gap dt)
-δ_t(j)     = max_i [ δ_{t−1}(i) + log A(i→j) ] + log B_t(j)
-then backtrack the stored argmax pointers from the best final state</div>
-<ul>
-<li><b>Gaps:</b> β grows with dt, so after a long gap larger detours are allowed.</li>
-<li><b>Disconnected roads / no valid transition:</b> the chain breaks and Viterbi restarts from that point (0.6 breaks per trip on average).</li>
-<li><b>Points without candidates</b> are skipped.</li>
-<li><b>β chosen on student-test</b> (swept 2, 5, 10, 20, 50); β = 50 gave the best Top-1.</li>
-</ul>
-<div class="tbl"><table>
-<tr><th>Student-test (mean of 10 trips)</th><th>Top-1</th><th>Continuity</th><th>Route F1</th></tr>
-<tr><td>LightGBM only</td><td class="n">0.889</td><td class="n">0.931</td><td class="n">0.870</td></tr>
-<tr><td>+ HMM β = 10</td><td class="n">0.896</td><td class="n best">0.973</td><td class="n best">0.902</td></tr>
-<tr><td>+ HMM β = 50</td><td class="n best">0.902</td><td class="n">0.966</td><td class="n">0.900</td></tr>
-</table></div>
-<p class="mute">Main effect is continuity: invalid jumps drop from 6.9% to about 3%. It cannot fix points whose true arc is not among the candidates. About 0.5 s per trip.</p>
-
-<h2 id="deploy">API and UI <span class="owner">Vedant Sharma (API) · Vedant Srivastava (UI)</span></h2>
-<ul>
-<li><b>Laptop 1:</b> <code>uv run uvicorn api.main:app --host 0.0.0.0 --port 8000</code>. <code>--host 0.0.0.0</code> makes it reachable from the other laptop. The evaluator trips folder is set with <code>PATHSNAP_EVAL_DIR</code>.</li>
-<li><b>Endpoints:</b> <code>GET /health</code>, <code>GET /trips</code> (lists trip ids), <code>POST /predict {"trip_id": "..."}</code>.</li>
-<li><b>/predict pipeline:</b> load track, nodes, arcs (not the route) → clean → candidates → 13 features → LightGBM probabilities → Viterbi → predicted arcs. Then the server reads the reference route and computes accuracy. It returns GPS points, the predicted route geometry and the metrics. The reference route never leaves the server.</li>
-<li><b>Logs:</b> every request prints the trip id, classifier and HMM Top-1, continuity, route F1 and time. Keep this terminal visible for the examiner.</li>
-<li><b>Laptop 2:</b> <code>cd ui &amp;&amp; python3 -m http.server 5500</code>, open <code>http://localhost:5500/?api=http://&lt;laptop1-ip&gt;:8000</code>. The UI lists the trips, sends the chosen id, draws GPS (blue), classifier-only (orange) and HMM route (red) on a Leaflet map with a metrics table.</li>
-<li>CORS is enabled so the browser on laptop 2 may call laptop 1. Leaflet is bundled locally, so the UI works without internet (map tiles need internet; the route still draws without them).</li>
-<li>Typical time per trip: 1–5 s.</li>
-</ul>
-
-<h2 id="qa">Rapid-fire Q&amp;A</h2>
+<h2 id="qa">Phase 1 rapid-fire</h2>
 <div class="qa">
 <details><summary>What is a .track file? What is an .arc?</summary><p>.track = GPS fixes: longitude, latitude, timestamp in seconds, ~1 per second. .arcs = directed road segments, each a pair (from_node, to_node) indexing rows of .nodes; the row number is the arc id that .route refers to.</p></details>
 <details><summary>How many features did you make? How many dropped?</summary><p>13 engineered per (point, candidate). None of the 13 dropped after training. Not used as features: raw lon, lat, timestamp, and trip/point/arc ids (6 columns), because they identify the trip rather than describe the match.</p></details>
